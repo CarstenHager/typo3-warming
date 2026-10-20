@@ -25,8 +25,8 @@
 		"eliashaeussler/cache-warmup": "^5.0",
 		"eliashaeussler/sse": "^2.0",
 		"eliashaeussler/typo3-sitemap-locator": "^1.0",
-		"guzzlehttp/guzzle": "^7.10",
-		"guzzlehttp/promises": "^2.0",
+		"guzzlehttp/guzzle": "^7.10 || ^8.0",
+		"guzzlehttp/promises": "^2.0 || ^3.0",
 		"mteu/typo3-typed-extconf": "^1.0",
 		"psr/event-dispatcher": "^1.0",
 		"psr/http-message": "^1.1 || ^2.0",
@@ -59,7 +59,7 @@
 		"eliashaeussler/typo3-vendor-bundler": "^4.1",
 		"eliashaeussler/version-bumper": "^4.0",
 		"ergebnis/composer-normalize": "^2.52",
-		"guzzlehttp/psr7": "^2.7",
+		"guzzlehttp/psr7": "^2.7 || ^3.0",
 		"helmich/typo3-typoscript-lint": "^3.3",
 		"php-webdriver/webdriver": "^1.15",
 		"phpstan/extension-installer": "^1.4",
@@ -88,8 +88,13 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"EliasHaeussler\\Typo3Warming\\": "Classes/"
-		}
+			"EliasHaeussler\\Typo3Warming\\": ["Classes"],
+			"Http\\Discovery\\": ["Resources/Private/Libs/vendor/php-http/discovery/src"],
+			"EliasHaeussler\\SSE\\": ["Resources/Private/Libs/vendor/eliashaeussler/sse/src"],
+			"EliasHaeussler\\CacheWarmup\\": ["Resources/Private/Libs/vendor/eliashaeussler/cache-warmup/src"],
+			"CuyZ\\Valinor\\": ["Resources/Private/Libs/vendor/cuyz/valinor/src"]
+		},
+		"files": ["Resources/Private/Libs/vendor/cuyz/valinor/src/Compiler/node-functions.php"]
 	},
 	"autoload-dev": {
 		"psr-4": {
@@ -114,11 +119,20 @@
 	"extra": {
 		"typo3/cms": {
 			"Package": {
-				"providesPackages": {}
+				"providesPackages": {
+					"cuyz/valinor": "",
+					"eliashaeussler/cache-warmup": "",
+					"eliashaeussler/sse": "",
+					"php-http/discovery": ""
+				}
 			},
 			"extension-key": "warming",
-			"version": "5.3.4",
-			"web-dir": ".Build/web"
+			"version": "5.3.4-dev",
+			"web-dir": ".Build/web",
+			"vendor-libraries": {
+				"root-path": "Resources/Private/Libs",
+				"sbom-file": "Resources/Private/Libs/sbom.json"
+			}
 		},
 		"version-bumper": {
 			"config-file": "Build/release/version-bumper.yaml"

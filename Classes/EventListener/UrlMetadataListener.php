@@ -68,7 +68,10 @@ final readonly class UrlMetadataListener
         $metadata = null;
         $exception = $event->exception();
 
-        if ($exception instanceof Exception\RequestException && ($response = $exception->getResponse()) !== null) {
+        if ($exception instanceof Exception\RequestException
+            && method_exists($exception, 'getResponse')
+            && ($response = $exception->getResponse()) !== null
+        ) {
             $metadata = $this->urlMetadataFactory->createFromResponse($response);
         }
 

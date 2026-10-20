@@ -54,6 +54,13 @@ final class HandlerStackBuilder
             $registeredHandler = $options['handler'];
         } elseif ($client instanceof Client) {
             $registeredHandler = $this->getHandlerFromClient($client);
+        } else {
+            // Preserve custom clients without relying on implementation-specific configuration.
+            $registeredHandler = static function (Message\RequestInterface $request, array $requestOptions) use ($client): Promise\PromiseInterface {
+                unset($requestOptions['handler']);
+
+                return $client->sendAsync($request, $requestOptions);
+            };
         }
 
         // Early return with new handler stack and given handler, if no handler is currently registered
@@ -67,6 +74,9 @@ final class HandlerStackBuilder
             return HandlerStack::create($handler ?? $registeredHandler);
         }
 
+        // Isolate middleware and transport changes from the shared client.
+        $registeredHandler = clone $registeredHandler;
+
         // Overwrite handler for currently registered handler stack
         if ($handler !== null) {
             $registeredHandler->setHandler($handler);
@@ -77,8 +87,7 @@ final class HandlerStackBuilder
 
     private function getHandlerFromClient(Client $client): ?callable
     {
-        $clientReflection = new \ReflectionObject($client);
-        $clientConfig = $clientReflection->getProperty('config')->getValue($client);
+        $clientConfig = $client->getConfig();
 
         if (is_callable($clientConfig['handler'] ?? null)) {
             return $clientConfig['handler'];

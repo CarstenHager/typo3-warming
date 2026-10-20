@@ -103,9 +103,16 @@ final class SubRequestHandler
         } catch (\Exception $exception) {
         }
 
-        return Promise\Create::rejectionFor(
-            new Exception\RequestException($exception->getMessage(), $request, $response),
-        );
+        // Guzzle 8 separates failures with a response from request-only failures.
+        if ($response !== null && class_exists(Exception\ResponseException::class)) {
+            $failure = new Exception\ResponseException($exception->getMessage(), $request, $response, $exception);
+        } elseif ($response !== null) {
+            $failure = new Exception\RequestException($exception->getMessage(), $request, $response, $exception);
+        } else {
+            $failure = new Exception\RequestException($exception->getMessage(), $request, previous: $exception);
+        }
+
+        return Promise\Create::rejectionFor($failure);
     }
 
     private function isSupportedRequest(Message\ServerRequestInterface $subRequest): bool

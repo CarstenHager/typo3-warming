@@ -83,7 +83,10 @@ final class DatabaseWriter extends Core\Log\Writer\AbstractWriter
     {
         $exception = $record->getData()['exception'] ?? null;
 
-        if (!($exception instanceof Exception\RequestException) || $exception->getResponse() === null) {
+        if (!($exception instanceof Exception\RequestException)
+            || !method_exists($exception, 'getResponse')
+            || $exception->getResponse() === null
+        ) {
             return $this->interpolate($record->getMessage(), $record->getData());
         }
 

@@ -92,18 +92,29 @@ final class ConcurrentUserAgentCrawler extends CacheWarmup\Crawler\AbstractConfi
         }
 
         // Build handler stack
-        $this->options['request_options']['handler'] = $this->handlerStackBuilder->buildFromClientOrRequestOptions(
+        $handlerStack = $this->handlerStackBuilder->buildFromClientOrRequestOptions(
             $this->client,
             $this->options['request_options'],
             $this->options['perform_subrequests'] ? $this->subRequestHandler : null,
         );
-        $this->options['request_options']['handler']->unshift(
+        $handlerStack->unshift(
             Http\Client\Handler\UrlMetadataPreparation::create(),
             'url_metadata_preparation',
         );
 
+        // Guzzle 8 accepts handlers only when constructing the client.
+        $clientConfig = $this->client instanceof Client ? $this->client->getConfig() : [];
+        $clientConfig['handler'] = $handlerStack;
+        $client = new Client($clientConfig);
+        $requestOptions = $this->options['request_options'];
+        unset($this->options['request_options']['handler']);
+
         // Start crawling
-        $pool = $this->createPool($urls, $this->client, $handlers);
+        try {
+            $pool = $this->createPool($urls, $client, $handlers);
+        } finally {
+            $this->options['request_options'] = $requestOptions;
+        }
         $pool->promise()->wait();
 
         return $resultHandler->getResult();
